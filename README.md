@@ -34,17 +34,27 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 
 ## Input/Output
 
-| Input       | Output                                 |
-| ----------- | -------------------------------------- |
-| 000         | Disable change-wallpaper automatically |
-| 001         | Enable change-wallpaper automatically  |
-| 010         | Switch **default method** to sequence  |
-| 011         | Switch **default method** to random    |
-| 100         | Set wallpaper sequentially             |
-| 101         | Set wallpaper randomly                 |
-| 110         | Restart program                        |
-| 111         | Exit program                           |
-| 1000 - 1110 | Reserved                               |
+| Event | Code | Action                                 |
+| ----- | ---- | -------------------------------------- |
+| 0     | 0    | Disable change-wallpaper automatically |
+| 0     | 1    | Enable change-wallpaper automatically  |
+| 1     | 0    | Switch **default method** to sequence  |
+| 1     | 1    | Switch **default method** to random    |
+| 2     | 0    | Set wallpaper sequentially             |
+| 2     | 1    | Set wallpaper randomly                 |
+| 3     | 0    | Restart program                        |
+| 3     | 1    | Exit program                           |
+| 4 - 9 |      | Reserved                               |
+
+**Example**
+
+31 means:
+
+> Event : 3
+>
+> Code : 1
+>
+> Action :   Exit program
 
 
 
