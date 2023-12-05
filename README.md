@@ -42,23 +42,22 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 | 1     | 1    | Switch **default method** to random    |
 | 2     | 0    | Set wallpaper sequentially             |
 | 2     | 1    | Set wallpaper randomly                 |
-| 3     | 0    | Restart program                        |
-| 3     | 1    | Exit program                           |
+| 3     | x    | Exit program                           |
 | 4 - 9 |      | Reserved                               |
 
 **Example**
 
-31 means:
+21 means:
 
-> Event : 3
+> Event : 2
 >
 > Code : 1
 >
-> Action :   Exit program
+> Action :   Set wallpaper randomly
 
 
 
-## Core structure
+
 
 
 

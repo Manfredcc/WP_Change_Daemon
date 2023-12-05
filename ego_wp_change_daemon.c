@@ -17,6 +17,7 @@ DESCRIPTION:
     Date            Author          Description
     ------          --------        ------------------
     2023/12/04      Manfred         First release
+    2023/12/05       Manfred         Add message queue for response
 
 ====================================================================*/
 
@@ -43,7 +44,7 @@ typedef enum _EVT {
     ECT_WP_AUTO_SWITCH,
     EVT_DEFAULT_METHOD,
     EVT_SWITCH_WALLPAPER,
-    EVT_RE_PROGRAM,
+    EVT_EXIT_PROGRAM,
     EVT_MAX,
 } EVT;
 
@@ -75,11 +76,19 @@ typedef struct _egoist {
 } egoist, *pegoist;
 pegoist ego = NULL;
 
+static bool stop = false; /* stop this program on true */
+
 /* Prototype */
+void get_wp_info(FILE *fp);
 int init(int argc, char *argv[]);
 void *auto_change(void *arg);
+void *receiver_loop(void *arg);
+int receiver(void);
+void action(char *msg);
 void switch_wp(SWITCH_TYPE type);
-void get_wp_info(FILE *fp);
+void wp_change_auto_enable(bool enable);
+void wp_auto_default_change(int method);
+void release(void);
 
 /*==============================MAIN FUNCTION==============================*/
 int main(int argc, char *argv[])
@@ -92,12 +101,12 @@ int main(int argc, char *argv[])
 
     if (ret) {
         fprintf(stderr, "Initialize failed\n");
+        release();
         return 1;
     }
 
-    for (;;) { /* Keep thread runs */
-        sleep(300);
-    }
+    pthread_join(ego->receiver, NULL);
+    release();
 
     return 0;
 }
@@ -108,7 +117,6 @@ int main(int argc, char *argv[])
  */
 int receiver(void)
 {
-    int i;
     int md = mq_open(MSG_QUEUE, O_RDONLY | O_CREAT, 0644, NULL);
     if (-1 == md) {
         fprintf(stderr, "Open %s failed\n", MSG_QUEUE);
@@ -176,8 +184,8 @@ void action(char *msg)
     case EVT_SWITCH_WALLPAPER:
         switch_wp(code);
         break;
-    case EVT_RE_PROGRAM:
-        //TODO;
+    case EVT_EXIT_PROGRAM:
+        stop = true;
         break;
     default:
         fprintf(stderr, "This message shouldn't be printf\n");
@@ -200,12 +208,14 @@ void *receiver_loop(void *arg)
 
         action(ego->msg);
 
+        if (stop) {
+            break;
+        }
+
     } while (1);
 
-    memset(ego->msg, '\0', ego->msg_attr.mq_msgsize);
-    free(ego->msg);
+    pthread_exit(NULL);
 }
-
 
 /*
  * Switch wallpaper by random or sequential
@@ -255,11 +265,18 @@ void get_wp_info(FILE *fp)
 void *auto_change(void *arg)
 {
     while (1) {
+        if (stop) {
+            break;
+        }
+
         if (ego->auto_change_enable) {
             switch_wp(ego->type);
         }
+
         sleep(ego->duration);
     }
+
+    pthread_exit(NULL);
 }
 
 /*
@@ -297,7 +314,6 @@ int init(int argc, char *argv[])
     ret |= pthread_create(&ego->auto_change, &ego->pthread_attr, auto_change, NULL);
     ret |= pthread_detach(ego->auto_change);
     ret |= pthread_create(&ego->receiver,&ego->pthread_attr, receiver_loop, NULL);
-    ret |= pthread_detach(ego->receiver);
     if (ret != 0) {
         fprintf(stderr, "Error with pthread: %s\n", strerror(ret));
         return 1;
@@ -307,3 +323,14 @@ int init(int argc, char *argv[])
     return 0;
 }
 
+void release(void)
+{
+    if (ego) {
+
+        if (ego->msg) {
+            free(ego->msg);
+        }
+
+        free(ego);
+    }
+}
