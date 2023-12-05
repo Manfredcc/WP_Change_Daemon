@@ -17,7 +17,9 @@ DESCRIPTION:
     Date            Author          Description
     ------          --------        ------------------
     2023/12/04      Manfred         First release
-    2023/12/05       Manfred         Add message queue for response
+    2023/12/05      Manfred         Add message queue for response
+    2023/12/05      Manfred         Add exit program action
+    2023/12/05      Manfred         Add go back switch method
 
 ====================================================================*/
 
@@ -44,7 +46,7 @@ typedef enum _EVT {
     ECT_WP_AUTO_SWITCH,
     EVT_DEFAULT_METHOD,
     EVT_SWITCH_WALLPAPER,
-    EVT_EXIT_PROGRAM,
+    EVT_RE_PROGRAM,
     EVT_MAX,
 } EVT;
 
@@ -85,9 +87,10 @@ void *auto_change(void *arg);
 void *receiver_loop(void *arg);
 int receiver(void);
 void action(char *msg);
-void switch_wp(SWITCH_TYPE type);
+void switch_wp(SWITCH_TYPE type, bool back);
 void wp_change_auto_enable(bool enable);
 void wp_auto_default_change(int method);
+void sequential_switch(bool back);
 void release(void);
 
 /*==============================MAIN FUNCTION==============================*/
@@ -182,10 +185,14 @@ void action(char *msg)
         wp_auto_default_change(code);
         break;
     case EVT_SWITCH_WALLPAPER:
-        switch_wp(code);
+        switch_wp(code, false);
         break;
-    case EVT_EXIT_PROGRAM:
-        stop = true;
+    case EVT_RE_PROGRAM:
+        if (code) {
+            stop = true;
+        } else {
+            switch_wp(code, true);
+        }
         break;
     default:
         fprintf(stderr, "This message shouldn't be printf\n");
@@ -217,10 +224,26 @@ void *receiver_loop(void *arg)
     pthread_exit(NULL);
 }
 
+void sequential_switch(bool back)
+{
+    if (back) {
+        if (0 == ego->cur_wp)
+            ego->cur_wp = ego->num_of_wp - 1;
+        ego->cur_wp--;
+    } else {
+        if (ego->cur_wp == ego->num_of_wp - 1)
+            ego->cur_wp = -1;
+        ego->cur_wp++;
+    }
+    char *cmd = (char *)malloc(strlen(CMD_SEQUENCE) + strlen(ego->wp_data[ego->cur_wp].name));
+    sprintf(cmd, CMD_SEQUENCE"%s", ego->wp_data[ego->cur_wp].name);
+    system(cmd);
+}
+
 /*
  * Switch wallpaper by random or sequential
  */
-void switch_wp(SWITCH_TYPE type)
+void switch_wp(SWITCH_TYPE type, bool back)
 {
     if (type < SWITCH_TYPE_MAX) {
         switch (type) {
@@ -229,13 +252,7 @@ void switch_wp(SWITCH_TYPE type)
             break;
         case SEQUENTIAL:
         default:
-            if (ego->cur_wp == ego->num_of_wp - 1) {
-                ego->cur_wp = -1;
-            }
-            ego->cur_wp++;
-            char *cmd = (char *)malloc(strlen(CMD_SEQUENCE) + strlen(ego->wp_data[ego->cur_wp].name));
-            sprintf(cmd, CMD_SEQUENCE"%s", ego->wp_data[ego->cur_wp].name);
-            system(cmd);
+            sequential_switch(back);
             break;
         }
     } else {
@@ -270,7 +287,7 @@ void *auto_change(void *arg)
         }
 
         if (ego->auto_change_enable) {
-            switch_wp(ego->type);
+            switch_wp(ego->type, false);
         }
 
         sleep(ego->duration);

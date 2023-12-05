@@ -10,9 +10,12 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 > sudo apt-get install feh
 > ```
 
-| Date       | Author  | Description   |
-| ---------- | ------- | ------------- |
-| 2023/12/04 | Manfred | First release |
+| Date       | Author  | Description                    |
+| ---------- | ------- | ------------------------------ |
+| 2023/12/04 | Manfred | First release                  |
+| 2023/12/05 | Manfred | Add message queue for response |
+| 2023/12/05 | Manfred | Add exit program action        |
+| 2023/12/05 | Manfred | Add go back switch method      |
 
 
 
@@ -42,7 +45,8 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 | 1     | 1    | Switch **default method** to random    |
 | 2     | 0    | Set wallpaper sequentially             |
 | 2     | 1    | Set wallpaper randomly                 |
-| 3     | x    | Exit program                           |
+| 3     | 0    | Go back to the previous wallpaper      |
+| 3     | 1    | Exit program                           |
 | 4 - 9 |      | Reserved                               |
 
 **Example**
@@ -57,7 +61,9 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 
 
 
+## Guide
 
+First you need to create a directory to store wallpapers
 
 
 
