@@ -10,12 +10,13 @@ This is a wallpaper-changing daemon that starts at the beginning of the system, 
 > sudo apt-get install feh
 > ```
 
-| Date       | Author  | Description                    |
-| ---------- | ------- | ------------------------------ |
-| 2023/12/04 | Manfred | First release                  |
-| 2023/12/05 | Manfred | Add message queue for response |
-| 2023/12/05 | Manfred | Add exit program action        |
-| 2023/12/05 | Manfred | Add go back switch method      |
+| Date       | Author  | Description                      |
+| ---------- | ------- | -------------------------------- |
+| 2023/12/04 | Manfred | First release                    |
+| 2023/12/05 | Manfred | Add message queue for response   |
+| 2023/12/05 | Manfred | Add exit program action          |
+| 2023/12/05 | Manfred | Add go back switch method        |
+| 2023/12/07 | Manfred | Add makefile and fixed some bugs |
 
 
 
@@ -117,7 +118,7 @@ sudo apt-get install rofi
 
 When you run this script for the first time, the `ego_wp_change_daemon` will be invoked. Afterward, you will encounter a user-friendly interface to control the `ego_wp_change_daemon` every time you run this script.
 
-![img](file:////home/ll/.config/QQ/nt_qq_ff852b2ef553efb6c6d891f6919495aa/nt_data/Pic/2023-12/Ori/6109bf738c4beff780647014998d966d.jpeg)
+![](README.assets/6109bf738c4beff780647014998d966d.jpg)
 
 > When I called Rofi, it is embarrassing that I couldn't bring up my snipping tool to take a screen-shot
 

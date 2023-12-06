@@ -20,6 +20,7 @@ DESCRIPTION:
     2023/12/05      Manfred         Add message queue for response
     2023/12/05      Manfred         Add exit program action
     2023/12/05      Manfred         Add go back switch method
+    2023/12/07      Manfred         Fix some bugs with cmd for feh
 
 ====================================================================*/
 
