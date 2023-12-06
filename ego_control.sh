@@ -26,31 +26,32 @@ rofi_menu_item() {
     echo 'Exit program'
 }
 
+send=ego_wp_change_send
 control() {
     case $1 in
         'Set wp sequentially')
-            $_thisdir/send 20
+            $_thisdir/$send 20
             ;;
         'Go back to previous wp')
-            $_thisdir/send 30
+            $_thisdir/$send 30
             ;;
         'Set wp randomly')
-            $_thisdir/send 21
+            $_thisdir/$send 21
             ;;
         'Disable ch-wp auto')
-            $_thisdir/send 00
+            $_thisdir/$send 00
             ;;
         'Enable ch-wp auto')
-            $_thisdir/send 01
+            $_thisdir/$send 01
             ;;
         'Set ch-wp auto method to sequence')
-            $_thisdir/send 10
+            $_thisdir/$send 10
             ;;
         'Set ch-wp auto method to random')
-            $_thisdir/send 11
+            $_thisdir/$send 11
             ;;
         'Exit program')
-            $_thisdir/send 31
+            $_thisdir/$send 31
             ;;
     esac
 }

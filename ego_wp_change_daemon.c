@@ -27,10 +27,9 @@ DESCRIPTION:
 #define DEFAULT_DURATION    5 * 60     /* second */
 #define MSG_QUEUE           "/ego_msg"
 #define DEFAULT_TYPE        SEQUENTIAL
-#define CMD_SEQUENCE        "feh --bg-fill --recursive \
-                                ~/02_resource/photo/wallpapers/select/"
-#define CMD_RANDOM          "feh --bg-fill --randomize --recursive \
-                                ~/02_resource/photo/wallpapers/select/"
+#define CMD_SEQUENCE        "feh --bg-fill --recursive"
+#define CMD_RANDOM          "feh --bg-fill --randomize --recursive"
+static const char *wp_dir = "~/02_resource/photo/wallpapers/select/";
 
 
 /* Defination */
@@ -226,6 +225,7 @@ void *receiver_loop(void *arg)
 
 void sequential_switch(bool back)
 {
+    char cmd[100];
     if (back) {
         if (0 == ego->cur_wp)
             ego->cur_wp = ego->num_of_wp - 1;
@@ -235,8 +235,7 @@ void sequential_switch(bool back)
             ego->cur_wp = -1;
         ego->cur_wp++;
     }
-    char *cmd = (char *)malloc(strlen(CMD_SEQUENCE) + strlen(ego->wp_data[ego->cur_wp].name));
-    sprintf(cmd, CMD_SEQUENCE"%s", ego->wp_data[ego->cur_wp].name);
+    sprintf(cmd, CMD_SEQUENCE " %s%s", wp_dir, ego->wp_data[ego->cur_wp].name);
     system(cmd);
 }
 
@@ -245,10 +244,12 @@ void sequential_switch(bool back)
  */
 void switch_wp(SWITCH_TYPE type, bool back)
 {
+    char cmd[100];
     if (type < SWITCH_TYPE_MAX) {
         switch (type) {
         case RANDOM:
-            system(CMD_RANDOM);
+            sprintf(cmd, CMD_RANDOM " %s", wp_dir);
+            system(cmd);
             break;
         case SEQUENTIAL:
         default:
