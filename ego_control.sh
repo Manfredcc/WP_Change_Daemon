@@ -10,11 +10,8 @@ if [ $? -eq 1 ]; then
     select_wp="/home/ll/02_resource/photo/wallpapers/select/"
     ls $select_wp > $_thisdir/wp.txt
     $_thisdir/ego_wp_change_daemon wp.txt &
-    echo "cc1"
     exit 1
-    echo "cc2"
 fi
-echo "cc3"
 
 # Send message to daemon by message when it is running
 
