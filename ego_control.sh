@@ -9,7 +9,7 @@ if [ $? -eq 1 ]; then
     echo "ego_wp_change_daemon is not running, start it"
     select_wp="/home/ll/02_resource/photo/wallpapers/select/"
     ls $select_wp > $_thisdir/wp.txt
-    $_thisdir/ego_wp_change_daemon wp.txt &
+    $_thisdir/ego_wp_change_daemon $_thisdir/wp.txt &
     exit 1
 fi
 
