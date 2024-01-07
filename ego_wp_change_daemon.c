@@ -6,6 +6,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <mqueue.h>
+#include "list_self.h"
 
 /*====================================================================
                     EGO_WP_CHANGE_DAEMON
@@ -21,6 +22,7 @@ DESCRIPTION:
     2023/12/05      Manfred         Add exit program action
     2023/12/05      Manfred         Add go back switch method
     2023/12/07      Manfred         Fix some bugs with cmd for feh
+    2024/01/07      Manfred         Changed the storage method to circular doubly linked list
 
 ====================================================================*/
 
@@ -29,12 +31,11 @@ DESCRIPTION:
 #define MSG_QUEUE           "/ego_msg"
 #define DEFAULT_TYPE        SEQUENTIAL
 #define CMD_SEQUENCE        "feh --bg-fill --recursive"
-#define CMD_RANDOM          "feh --bg-fill --randomize --recursive"
+// #define CMD_RANDOM          "feh --bg-fill --randomize --recursive"
 static const char *wp_dir = "~/02_resource/photo/wallpapers/select/";
 
 
 /* Defination */
-#define MAX_WP_NUM      30
 #define MAX_LENGTH_WP   50
 
 typedef enum _bool {
@@ -52,6 +53,7 @@ typedef enum _EVT {
 
 typedef struct _wp_name {
     char name[MAX_LENGTH_WP + 1];
+    struct list_head list;
 } wp_name, *pwp_name;
 
 typedef enum _SWITCH_TYPE {
@@ -62,9 +64,9 @@ typedef enum _SWITCH_TYPE {
 
 typedef struct _egoist {
     char *name;
-    wp_name wp_data[MAX_WP_NUM];
+    wp_name head;
+    struct list_head *cur_wp;
     int num_of_wp;
-    int cur_wp;
     int duration;
     bool auto_change_enable;
     SWITCH_TYPE type;
@@ -227,16 +229,15 @@ void *receiver_loop(void *arg)
 void sequential_switch(bool back)
 {
     char cmd[100];
+    char buff[MAX_LENGTH_WP];
     if (back) {
-        if (0 == ego->cur_wp)
-            ego->cur_wp = ego->num_of_wp - 1;
-        ego->cur_wp--;
+            sprintf(buff, "%s", list_entry(ego->cur_wp->prev, wp_name, list)->name);
+            ego->cur_wp = ego->cur_wp->prev;
     } else {
-        if (ego->cur_wp == ego->num_of_wp - 1)
-            ego->cur_wp = -1;
-        ego->cur_wp++;
+        sprintf(buff, "%s", list_entry(ego->cur_wp->next, wp_name, list)->name);
+        ego->cur_wp = ego->cur_wp->next;
     }
-    sprintf(cmd, CMD_SEQUENCE " %s%s", wp_dir, ego->wp_data[ego->cur_wp].name);
+    sprintf(cmd, CMD_SEQUENCE " %s%s", wp_dir, buff);
     system(cmd);
 }
 
@@ -246,10 +247,21 @@ void sequential_switch(bool back)
 void switch_wp(SWITCH_TYPE type, bool back)
 {
     char cmd[100];
+    int random;
+    int i;
     if (type < SWITCH_TYPE_MAX) {
         switch (type) {
         case RANDOM:
-            sprintf(cmd, CMD_RANDOM " %s", wp_dir);
+            srand(time(NULL));
+            while(1) {
+                random = rand() % ego->num_of_wp;
+                if (0 != random)
+                    break;
+            }
+            for (i = 0; i < random; i++) {
+                ego->cur_wp = ego->cur_wp->next;
+            }
+            sprintf(cmd, CMD_SEQUENCE " %s%s", wp_dir, list_entry(ego->cur_wp, wp_name, list)->name);
             system(cmd);
             break;
         case SEQUENTIAL:
@@ -267,12 +279,21 @@ void switch_wp(SWITCH_TYPE type, bool back)
  */
 void get_wp_info(FILE *fp)
 {
-    ego->num_of_wp = 0;
+    char buff[MAX_LENGTH_WP];
+    pwp_name p;
+    int first = 1;
 
     /* get wp info */
-    while (fgets(ego->wp_data[ego->num_of_wp].name, MAX_LENGTH_WP, fp) != NULL
-                    && ego->num_of_wp < MAX_WP_NUM) {
-        ego->num_of_wp++;
+    while (fgets(buff, MAX_LENGTH_WP, fp) != NULL) {
+        if (first) {
+            first--;
+            sprintf((list_entry(&ego->head.list, wp_name, list))->name, "%s", buff);
+            continue;
+        }
+        p = (pwp_name)malloc(sizeof(*p));
+        INIT_LIST_HEAD(&p->list);
+        list_add_tail(&p->list, &ego->head.list);
+        sprintf((list_entry(&p->list, wp_name, list))->name, "%s", buff);
     }
 
     fclose(fp);
@@ -324,10 +345,13 @@ int init(int argc, char *argv[])
     }
 
     ego->name = "egoist_wp_change";
+    INIT_LIST_HEAD(&ego->head.list);
     ego->duration = DEFAULT_DURATION;
     ego->type = DEFAULT_TYPE;
     ego->auto_change_enable = true;
     get_wp_info(fp);
+    ego->num_of_wp = list_length(&ego->head.list);
+    ego->cur_wp = &ego->head.list;
     
     ret = pthread_attr_init(&ego->pthread_attr);
     ret |= pthread_create(&ego->auto_change, &ego->pthread_attr, auto_change, NULL);
